@@ -2,7 +2,7 @@
 #include <cmath>
 #include <algorithm>
 
-class ADSR
+class OmniADSR
 {
 public:
     float attack  = 0.05f;

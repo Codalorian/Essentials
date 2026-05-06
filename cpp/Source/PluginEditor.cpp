@@ -29,25 +29,22 @@ struct OmniLookAndFeel : public juce::LookAndFeel_V4
 
     void drawRotarySlider(juce::Graphics& g, int x, int y, int w, int h,
                           float sliderPos, float startAngle, float endAngle,
-                          juce::Slider& s) override
+                          juce::Slider&) override
     {
         float radius = std::min(w, h) * 0.4f;
         float cx = x + w * 0.5f, cy = y + h * 0.5f;
 
-        // Track
         juce::Path track;
         track.addCentredArc(cx, cy, radius, radius, 0.0f, startAngle, endAngle, true);
         g.setColour(juce::Colour{0xff334466});
         g.strokePath(track, juce::PathStrokeType(2.5f));
 
-        // Fill
         float angle = startAngle + sliderPos * (endAngle - startAngle);
         juce::Path fill;
         fill.addCentredArc(cx, cy, radius, radius, 0.0f, startAngle, angle, true);
         g.setColour(ACCENT);
         g.strokePath(fill, juce::PathStrokeType(2.5f));
 
-        // Thumb dot
         float tx = cx + radius * std::sin(angle);
         float ty = cy - radius * std::cos(angle);
         g.setColour(juce::Colours::white);
@@ -61,9 +58,9 @@ OpenOmniEditor::OpenOmniEditor(OpenOmniProcessor& p)
     : AudioProcessorEditor(&p), processor(p)
 {
     setLookAndFeel(&omniLF);
-    setSize(1020, 640);
+    setSize(1100, 530);
 
-    // Preset combo
+    // Preset bar
     presetLabel.setText("Preset", juce::dontSendNotification);
     presetLabel.setColour(juce::Label::textColourId, ACCENT);
     addAndMakeVisible(presetLabel);
@@ -71,27 +68,22 @@ OpenOmniEditor::OpenOmniEditor(OpenOmniProcessor& p)
     for (int i = 0; i < (int)names.size(); ++i)
         presetCombo.addItem(names[i], i + 1);
     presetCombo.setSelectedItemIndex(p.getCurrentProgram(), juce::dontSendNotification);
-    presetCombo.onChange = [this, &p]()
-    {
+    presetCombo.onChange = [this, &p]() {
         p.setCurrentProgram(presetCombo.getSelectedItemIndex());
     };
     addAndMakeVisible(presetCombo);
 
-    // Section labels
-    for (auto* g : {&oscAGroup,&oscBGroup,&envGroup,&filtGroup,
-                    &fenvGroup,&penvGroup,&lfoGroup,&voiceGroup,&fxGroup,&masterGroup})
-        addAndMakeVisible(g);
-
-    oscAGroup.setText("OSC A");
-    oscBGroup.setText("OSC B");
-    envGroup.setText("AMP ENV");
-    filtGroup.setText("FILTER");
-    fenvGroup.setText("FILTER ENV");
-    penvGroup.setText("PITCH ENV");
-    lfoGroup.setText("LFO");
-    voiceGroup.setText("VOICE");
-    fxGroup.setText("FX");
-    masterGroup.setText("MASTER");
+    // Group boxes
+    oscAGroup.setText("OSC A");      addAndMakeVisible(oscAGroup);
+    oscBGroup.setText("OSC B");      addAndMakeVisible(oscBGroup);
+    envGroup.setText("AMP ENV");     addAndMakeVisible(envGroup);
+    filtGroup.setText("FILTER");     addAndMakeVisible(filtGroup);
+    fenvGroup.setText("FILTER ENV"); addAndMakeVisible(fenvGroup);
+    penvGroup.setText("PITCH ENV");  addAndMakeVisible(penvGroup);
+    lfoGroup.setText("LFO");         addAndMakeVisible(lfoGroup);
+    voiceGroup.setText("VOICE");     addAndMakeVisible(voiceGroup);
+    fxGroup.setText("FX");           addAndMakeVisible(fxGroup);
+    masterGroup.setText("MASTER");   addAndMakeVisible(masterGroup);
 
     const juce::StringArray waves{"sine","soft","triangle","sawtooth","square","bell","gamelan"};
     const juce::StringArray fmodes{"lowpass","highpass","bandpass"};
@@ -99,14 +91,14 @@ OpenOmniEditor::OpenOmniEditor(OpenOmniProcessor& p)
     const juce::StringArray lwaves{"sine","triangle","sawtooth","square"};
 
     // OSC A
-    makeCombo(oscAWaveCombo, oscAWaveLabel, "Wave",  waves, "osc_a_wave",  oscAWaveAttach);
+    makeCombo(oscAWaveCombo,  oscAWaveLabel,  "Wave",  waves, "osc_a_wave",  oscAWaveAttach);
     makeKnob(oscALevelKnob, oscALevelLabel, "Level", "osc_a_level", oscALevelAtt);
     makeKnob(oscAOctKnob,   oscAOctLabel,   "Oct",   "osc_a_oct",   oscAOctAtt);
     makeKnob(oscASemiKnob,  oscASemiLabel,  "Semi",  "osc_a_semi",  oscASemiAtt);
     makeKnob(oscAFineKnob,  oscAFineLabel,  "Fine",  "osc_a_fine",  oscAFineAtt);
 
     // OSC B
-    makeCombo(oscBWaveCombo, oscBWaveLabel, "Wave",  waves, "osc_b_wave",  oscBWaveAttach);
+    makeCombo(oscBWaveCombo,  oscBWaveLabel,  "Wave",  waves, "osc_b_wave",  oscBWaveAttach);
     makeKnob(oscBLevelKnob, oscBLevelLabel, "Level", "osc_b_level", oscBLevelAtt);
     makeKnob(oscBOctKnob,   oscBOctLabel,   "Oct",   "osc_b_oct",   oscBOctAtt);
     makeKnob(oscBSemiKnob,  oscBSemiLabel,  "Semi",  "osc_b_semi",  oscBSemiAtt);
@@ -135,9 +127,9 @@ OpenOmniEditor::OpenOmniEditor(OpenOmniProcessor& p)
     makeKnob(frelKnob, frelLbl, "REL", "fenv_release", frelAtt);
 
     // Pitch envelope
-    makeKnob(penvAmtKnob, penvAmtLbl, "Amt",  "penv_amount", penvAmtAtt);
-    makeKnob(penvAtkKnob, penvAtkLbl, "Att",  "penv_attack", penvAtkAtt);
-    makeKnob(penvDecKnob, penvDecLbl, "Dec",  "penv_decay",  penvDecAtt);
+    makeKnob(penvAmtKnob, penvAmtLbl, "Amt", "penv_amount", penvAmtAtt);
+    makeKnob(penvAtkKnob, penvAtkLbl, "Att", "penv_attack", penvAtkAtt);
+    makeKnob(penvDecKnob, penvDecLbl, "Dec", "penv_decay",  penvDecAtt);
 
     // LFO
     makeCombo(lfoWaveCombo,   lfoWaveLbl,   "Wave",   lwaves, "lfo_wave",   lfoWaveAtt);
@@ -151,20 +143,18 @@ OpenOmniEditor::OpenOmniEditor(OpenOmniProcessor& p)
     makeKnob(glideKnob,  glideLbl,  "Glide",  "glide_time",   glideAtt);
 
     // FX
-    makeKnob(revSizeKnob, revSizeLbl, "R.Size", "reverb_size",     revSizeAtt);
-    makeKnob(revDampKnob, revDampLbl, "R.Damp", "reverb_damp",     revDampAtt);
-    makeKnob(revWetKnob,  revWetLbl,  "R.Wet",  "reverb_wet",      revWetAtt);
-    makeKnob(delTimeKnob, delTimeLbl, "D.Time", "delay_time",      delTimeAtt);
-    makeKnob(delFbKnob,   delFbLbl,   "D.Fbk",  "delay_feedback",  delFbAtt);
-    makeKnob(delWetKnob,  delWetLbl,  "D.Wet",  "delay_wet",       delWetAtt);
-    makeKnob(chrRateKnob, chrRateLbl, "C.Rate", "chorus_rate",     chrRateAtt);
-    makeKnob(chrDepKnob,  chrDepLbl,  "C.Dep",  "chorus_depth",    chrDepAtt);
-    makeKnob(chrWetKnob,  chrWetLbl,  "C.Wet",  "chorus_wet",      chrWetAtt);
+    makeKnob(revSizeKnob, revSizeLbl, "R.Size", "reverb_size",    revSizeAtt);
+    makeKnob(revDampKnob, revDampLbl, "R.Damp", "reverb_damp",    revDampAtt);
+    makeKnob(revWetKnob,  revWetLbl,  "R.Wet",  "reverb_wet",     revWetAtt);
+    makeKnob(delTimeKnob, delTimeLbl, "D.Time", "delay_time",     delTimeAtt);
+    makeKnob(delFbKnob,   delFbLbl,   "D.Fbk",  "delay_feedback", delFbAtt);
+    makeKnob(delWetKnob,  delWetLbl,  "D.Wet",  "delay_wet",      delWetAtt);
+    makeKnob(chrRateKnob, chrRateLbl, "C.Rate", "chorus_rate",    chrRateAtt);
+    makeKnob(chrDepKnob,  chrDepLbl,  "C.Dep",  "chorus_depth",   chrDepAtt);
+    makeKnob(chrWetKnob,  chrWetLbl,  "C.Wet",  "chorus_wet",     chrWetAtt);
 
     // Master
     makeKnob(masterVolKnob, masterVolLbl, "Volume", "master_volume", masterVolAtt);
-
-    startTimerHz(30);
 }
 
 OpenOmniEditor::~OpenOmniEditor()
@@ -176,7 +166,7 @@ void OpenOmniEditor::makeKnob(juce::Slider& s, juce::Label& l, const juce::Strin
                                const juce::String& paramId, std::unique_ptr<Attach>& att)
 {
     s.setSliderStyle(juce::Slider::RotaryVerticalDrag);
-    s.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 14);
+    s.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 56, 14);
     addAndMakeVisible(s);
     l.setText(text, juce::dontSendNotification);
     l.setJustificationType(juce::Justification::centred);
@@ -199,184 +189,138 @@ void OpenOmniEditor::makeCombo(juce::ComboBox& c, juce::Label& l, const juce::St
 // ── Layout ───────────────────────────────────────────────────────────────────
 void OpenOmniEditor::resized()
 {
-    auto area = getLocalBounds().reduced(6);
-    int KW = 68, KH = 80, COMBO_H = 22, LABEL_H = 16, ROW_H = 100;
-    int GW = 5*KW + 10;  // group width for 5-knob rows
+    // Layout constants
+    const int KW   = 46;   // knob column width
+    const int KH   = 82;   // rotary knob height
+    const int LH   = 16;   // label height
+    const int CH   = 22;   // combo height
+    const int CW   = 78;   // combo width
+    const int GM   = 8;    // group inner margin
+    const int GT   = 22;   // group title bar height
+    const int ROWH = KH + LH + GT + GM * 2;   // total row height
+    const int GAP  = 6;    // gap between groups
 
-    // Preset bar (top)
-    auto topBar = area.removeFromTop(30);
-    presetLabel.setBounds(topBar.removeFromLeft(60));
-    presetCombo.setBounds(topBar.removeFromLeft(200));
-
-    area.removeFromTop(4);
-
-    // Row 1: OSC A | OSC B | AMP ENV | FILTER
-    auto row1 = area.removeFromTop(ROW_H + 10);
-
-    // OSC A — 5 controls: wave combo + 4 knobs
-    auto oscAR = row1.removeFromLeft(GW + 12);
-    oscAGroup.setBounds(oscAR);
-    auto oscAI = oscAR.reduced(6, 14);
-    oscAWaveLabel.setBounds(oscAI.removeFromLeft(8));
-    oscAI.removeFromLeft(2);
-    auto wa = oscAI.removeFromLeft(70).removeFromTop(COMBO_H + LABEL_H);
-    oscAWaveLabel.setBounds(wa.removeFromBottom(LABEL_H));
-    oscAWaveCombo.setBounds(wa);
-    for (auto* [k, l] : {std::pair<juce::Slider*, juce::Label*>{&oscALevelKnob,&oscALevelLabel},
-                                                                {&oscAOctKnob,&oscAOctLabel},
-                                                                {&oscASemiKnob,&oscASemiLabel},
-                                                                {&oscAFineKnob,&oscAFineLabel}})
+    // Helpers — no structured bindings, plain lambdas
+    auto placeK = [&](juce::Slider& s, juce::Label& l, int x, int y)
     {
-        auto col = oscAI.removeFromLeft(KW);
-        l->setBounds(col.removeFromBottom(LABEL_H));
-        k->setBounds(col.removeFromTop(KH - LABEL_H - 14));
-    }
-    row1.removeFromLeft(4);
-
-    // OSC B — same layout
-    auto oscBR = row1.removeFromLeft(GW + 30);
-    oscBGroup.setBounds(oscBR);
-    auto oscBI = oscBR.reduced(6, 14);
-    auto wb = oscBI.removeFromLeft(70).removeFromTop(COMBO_H + LABEL_H + 4);
-    oscBEnableBtn.setBounds(wb.removeFromTop(20));
-    wb.removeFromTop(2);
-    oscBWaveLabel.setBounds(wb.removeFromBottom(LABEL_H));
-    oscBWaveCombo.setBounds(wb);
-    for (auto* [k, l] : {std::pair<juce::Slider*, juce::Label*>{&oscBLevelKnob,&oscBLevelLabel},
-                                                                {&oscBOctKnob,&oscBOctLabel},
-                                                                {&oscBSemiKnob,&oscBSemiLabel},
-                                                                {&oscBFineKnob,&oscBFineLabel}})
+        s.setBounds(x, y,      KW, KH);
+        l.setBounds(x, y + KH, KW, LH);
+    };
+    auto placeC = [&](juce::ComboBox& c, juce::Label& l, int x, int y)
     {
-        auto col = oscBI.removeFromLeft(KW);
-        l->setBounds(col.removeFromBottom(LABEL_H));
-        k->setBounds(col.removeFromTop(KH - LABEL_H - 14));
-    }
-    row1.removeFromLeft(4);
+        c.setBounds(x, y,      CW, CH);
+        l.setBounds(x, y + CH, CW, LH);
+    };
 
-    // Amp Env
-    auto envR = row1.removeFromLeft(4*KW + 12);
-    envGroup.setBounds(envR);
-    auto envI = envR.reduced(6, 14);
-    for (auto* [k, l] : {std::pair<juce::Slider*, juce::Label*>{&atkKnob,&atkLbl},
-                                                               {&decKnob,&decLbl},
-                                                               {&susKnob,&susLbl},
-                                                               {&relKnob,&relLbl}})
-    {
-        auto col = envI.removeFromLeft(KW);
-        l->setBounds(col.removeFromBottom(LABEL_H));
-        k->setBounds(col.removeFromTop(KH - LABEL_H - 14));
-    }
+    // ── Header ───────────────────────────────────────────────────────────────
+    presetLabel.setBounds(6, 8, 55, 22);
+    presetCombo.setBounds(65, 8, 200, 24);
 
-    row1.removeFromLeft(4);
+    // ── Row 1  (OSC A | OSC B | AMP ENV | FILTER) ───────────────────────────
+    int y   = 38;
+    int cy  = y + GT + GM;   // content y inside group
+    int gx  = 4;
 
-    // Filter
-    auto filtR = row1;
-    filtGroup.setBounds(filtR);
-    auto filtI = filtR.reduced(6, 14);
-    auto fmW = filtI.removeFromLeft(70).removeFromTop(COMBO_H + LABEL_H);
-    filterModeLabel.setBounds(fmW.removeFromBottom(LABEL_H));
-    filterModeCombo.setBounds(fmW);
-    for (auto* [k, l] : {std::pair<juce::Slider*, juce::Label*>{&filterCutKnob,&filterCutLbl},
-                                                               {&filterResKnob,&filterResLbl},
-                                                               {&filterEnvKnob,&filterEnvLbl},
-                                                               {&filterKtrkKnob,&filterKtrkLbl}})
-    {
-        auto col = filtI.removeFromLeft(KW);
-        l->setBounds(col.removeFromBottom(LABEL_H));
-        k->setBounds(col.removeFromTop(KH - LABEL_H - 14));
-    }
+    // OSC A
+    int oscAW = CW + 4 * KW + GM * 2;
+    oscAGroup.setBounds(gx, y, oscAW, ROWH);
+    placeC(oscAWaveCombo, oscAWaveLabel, gx + GM, cy);
+    placeK(oscALevelKnob, oscALevelLabel, gx + GM + CW,           cy);
+    placeK(oscAOctKnob,   oscAOctLabel,   gx + GM + CW + KW,      cy);
+    placeK(oscASemiKnob,  oscASemiLabel,  gx + GM + CW + KW * 2,  cy);
+    placeK(oscAFineKnob,  oscAFineLabel,  gx + GM + CW + KW * 3,  cy);
+    gx += oscAW + GAP;
 
-    area.removeFromTop(6);
+    // OSC B
+    int oscBW = CW + 4 * KW + GM * 2;
+    oscBGroup.setBounds(gx, y, oscBW, ROWH);
+    oscBEnableBtn.setBounds(gx + GM, cy, CW, 18);
+    placeC(oscBWaveCombo, oscBWaveLabel, gx + GM, cy + 20);
+    placeK(oscBLevelKnob, oscBLevelLabel, gx + GM + CW,           cy);
+    placeK(oscBOctKnob,   oscBOctLabel,   gx + GM + CW + KW,      cy);
+    placeK(oscBSemiKnob,  oscBSemiLabel,  gx + GM + CW + KW * 2,  cy);
+    placeK(oscBFineKnob,  oscBFineLabel,  gx + GM + CW + KW * 3,  cy);
+    gx += oscBW + GAP;
 
-    // Row 2: F.ENV | P.ENV | LFO | VOICE
-    auto row2 = area.removeFromTop(ROW_H + 10);
+    // AMP ENV
+    int envW = 4 * KW + GM * 2;
+    envGroup.setBounds(gx, y, envW, ROWH);
+    placeK(atkKnob, atkLbl, gx + GM,           cy);
+    placeK(decKnob, decLbl, gx + GM + KW,      cy);
+    placeK(susKnob, susLbl, gx + GM + KW * 2,  cy);
+    placeK(relKnob, relLbl, gx + GM + KW * 3,  cy);
+    gx += envW + GAP;
 
-    // Filter Env
-    auto fenvR = row2.removeFromLeft(4*KW + 12);
-    fenvGroup.setBounds(fenvR);
-    auto fenvI = fenvR.reduced(6, 14);
-    for (auto* [k, l] : {std::pair<juce::Slider*, juce::Label*>{&fatkKnob,&fatkLbl},
-                                                               {&fdecKnob,&fdecLbl},
-                                                               {&fsusKnob,&fsusLbl},
-                                                               {&frelKnob,&frelLbl}})
-    {
-        auto col = fenvI.removeFromLeft(KW);
-        l->setBounds(col.removeFromBottom(LABEL_H));
-        k->setBounds(col.removeFromTop(KH - LABEL_H - 14));
-    }
-    row2.removeFromLeft(4);
+    // FILTER
+    int filtW = CW + 4 * KW + GM * 2;
+    filtGroup.setBounds(gx, y, filtW, ROWH);
+    placeC(filterModeCombo, filterModeLabel, gx + GM, cy);
+    placeK(filterCutKnob,  filterCutLbl,  gx + GM + CW,           cy);
+    placeK(filterResKnob,  filterResLbl,  gx + GM + CW + KW,      cy);
+    placeK(filterEnvKnob,  filterEnvLbl,  gx + GM + CW + KW * 2,  cy);
+    placeK(filterKtrkKnob, filterKtrkLbl, gx + GM + CW + KW * 3,  cy);
 
-    // Pitch Env
-    auto penvR = row2.removeFromLeft(3*KW + 12);
-    penvGroup.setBounds(penvR);
-    auto penvI = penvR.reduced(6, 14);
-    for (auto* [k, l] : {std::pair<juce::Slider*, juce::Label*>{&penvAmtKnob,&penvAmtLbl},
-                                                               {&penvAtkKnob,&penvAtkLbl},
-                                                               {&penvDecKnob,&penvDecLbl}})
-    {
-        auto col = penvI.removeFromLeft(KW);
-        l->setBounds(col.removeFromBottom(LABEL_H));
-        k->setBounds(col.removeFromTop(KH - LABEL_H - 14));
-    }
-    row2.removeFromLeft(4);
+    // ── Row 2  (FENV | PENV | LFO | VOICE) ──────────────────────────────────
+    y  += ROWH + GAP;
+    cy  = y + GT + GM;
+    gx  = 4;
+
+    // FILTER ENV
+    int fenvW = 4 * KW + GM * 2;
+    fenvGroup.setBounds(gx, y, fenvW, ROWH);
+    placeK(fatkKnob, fatkLbl, gx + GM,           cy);
+    placeK(fdecKnob, fdecLbl, gx + GM + KW,      cy);
+    placeK(fsusKnob, fsusLbl, gx + GM + KW * 2,  cy);
+    placeK(frelKnob, frelLbl, gx + GM + KW * 3,  cy);
+    gx += fenvW + GAP;
+
+    // PITCH ENV
+    int penvW = 3 * KW + GM * 2;
+    penvGroup.setBounds(gx, y, penvW, ROWH);
+    placeK(penvAmtKnob, penvAmtLbl, gx + GM,           cy);
+    placeK(penvAtkKnob, penvAtkLbl, gx + GM + KW,      cy);
+    placeK(penvDecKnob, penvDecLbl, gx + GM + KW * 2,  cy);
+    gx += penvW + GAP;
 
     // LFO
-    auto lfoR = row2.removeFromLeft(4*KW + 80);
-    lfoGroup.setBounds(lfoR);
-    auto lfoI = lfoR.reduced(6, 14);
-    auto lwW = lfoI.removeFromLeft(70).removeFromTop(COMBO_H + LABEL_H);
-    lfoWaveLbl.setBounds(lwW.removeFromBottom(LABEL_H));
-    lfoWaveCombo.setBounds(lwW);
-    auto ltW = lfoI.removeFromLeft(70).removeFromTop(COMBO_H + LABEL_H);
-    lfoTargetLbl.setBounds(ltW.removeFromBottom(LABEL_H));
-    lfoTargetCombo.setBounds(ltW);
-    for (auto* [k, l] : {std::pair<juce::Slider*, juce::Label*>{&lfoRateKnob,&lfoRateLbl},
-                                                               {&lfoDepthKnob,&lfoDepthLbl}})
-    {
-        auto col = lfoI.removeFromLeft(KW);
-        l->setBounds(col.removeFromBottom(LABEL_H));
-        k->setBounds(col.removeFromTop(KH - LABEL_H - 14));
-    }
-    row2.removeFromLeft(4);
+    int lfoW = CW * 2 + 2 * KW + GM * 2;
+    lfoGroup.setBounds(gx, y, lfoW, ROWH);
+    placeC(lfoWaveCombo,   lfoWaveLbl,   gx + GM,           cy);
+    placeC(lfoTargetCombo, lfoTargetLbl, gx + GM + CW,      cy);
+    placeK(lfoRateKnob,  lfoRateLbl,  gx + GM + CW * 2,      cy);
+    placeK(lfoDepthKnob, lfoDepthLbl, gx + GM + CW * 2 + KW, cy);
+    gx += lfoW + GAP;
 
-    // Voice
-    auto voiceR = row2;
-    voiceGroup.setBounds(voiceR);
-    auto voiceI = voiceR.reduced(6, 14);
-    for (auto* [k, l] : {std::pair<juce::Slider*, juce::Label*>{&unisonKnob,&unisonLbl},
-                                                               {&detuneKnob,&detuneLbl},
-                                                               {&glideKnob,&glideLbl}})
-    {
-        auto col = voiceI.removeFromLeft(KW);
-        l->setBounds(col.removeFromBottom(LABEL_H));
-        k->setBounds(col.removeFromTop(KH - LABEL_H - 14));
-    }
+    // VOICE
+    int voiceW = 3 * KW + GM * 2;
+    voiceGroup.setBounds(gx, y, voiceW, ROWH);
+    placeK(unisonKnob, unisonLbl, gx + GM,           cy);
+    placeK(detuneKnob, detuneLbl, gx + GM + KW,      cy);
+    placeK(glideKnob,  glideLbl,  gx + GM + KW * 2,  cy);
 
-    area.removeFromTop(6);
+    // ── Row 3  (FX | MASTER) ─────────────────────────────────────────────────
+    y  += ROWH + GAP;
+    cy  = y + GT + GM;
+    gx  = 4;
 
-    // Row 3: FX (9 knobs) | Master
-    auto row3 = area;
-    auto fxR = row3.removeFromLeft(9*KW + 16);
-    fxGroup.setBounds(fxR);
-    auto fxI = fxR.reduced(6, 14);
-    for (auto* [k, l] : {std::pair<juce::Slider*, juce::Label*>
-        {&revSizeKnob,&revSizeLbl},{&revDampKnob,&revDampLbl},{&revWetKnob,&revWetLbl},
-        {&delTimeKnob,&delTimeLbl},{&delFbKnob,&delFbLbl},{&delWetKnob,&delWetLbl},
-        {&chrRateKnob,&chrRateLbl},{&chrDepKnob,&chrDepLbl},{&chrWetKnob,&chrWetLbl}})
-    {
-        auto col = fxI.removeFromLeft(KW);
-        l->setBounds(col.removeFromBottom(LABEL_H));
-        k->setBounds(col.removeFromTop(KH - LABEL_H - 14));
-    }
+    // FX (9 knobs: reverb x3, delay x3, chorus x3)
+    int fxW = 9 * KW + GM * 2;
+    fxGroup.setBounds(gx, y, fxW, ROWH);
+    placeK(revSizeKnob, revSizeLbl, gx + GM + KW * 0,  cy);
+    placeK(revDampKnob, revDampLbl, gx + GM + KW * 1,  cy);
+    placeK(revWetKnob,  revWetLbl,  gx + GM + KW * 2,  cy);
+    placeK(delTimeKnob, delTimeLbl, gx + GM + KW * 3,  cy);
+    placeK(delFbKnob,   delFbLbl,   gx + GM + KW * 4,  cy);
+    placeK(delWetKnob,  delWetLbl,  gx + GM + KW * 5,  cy);
+    placeK(chrRateKnob, chrRateLbl, gx + GM + KW * 6,  cy);
+    placeK(chrDepKnob,  chrDepLbl,  gx + GM + KW * 7,  cy);
+    placeK(chrWetKnob,  chrWetLbl,  gx + GM + KW * 8,  cy);
+    gx += fxW + GAP;
 
-    row3.removeFromLeft(4);
-
-    auto masterR = row3;
-    masterGroup.setBounds(masterR);
-    auto masterI = masterR.reduced(6, 14);
-    auto col = masterI.removeFromLeft(KW);
-    masterVolLbl.setBounds(col.removeFromBottom(LABEL_H));
-    masterVolKnob.setBounds(col.removeFromTop(KH - LABEL_H - 14));
+    // MASTER
+    int masterW = KW + GM * 2;
+    masterGroup.setBounds(gx, y, masterW, ROWH);
+    placeK(masterVolKnob, masterVolLbl, gx + GM, cy);
 }
 
 // ── Paint ────────────────────────────────────────────────────────────────────
@@ -384,20 +328,16 @@ void OpenOmniEditor::paint(juce::Graphics& g)
 {
     g.fillAll(BG_DARK);
 
-    // Header gradient band
     juce::ColourGradient grad{BG_MED, 0, 0, BG_DARK, 0, 36.0f, false};
     g.setGradientFill(grad);
     g.fillRect(0, 0, getWidth(), 36);
 
     g.setColour(ACCENT);
-    g.setFont(juce::Font("Arial", 20.0f, juce::Font::bold));
+    g.setFont(juce::Font(juce::FontOptions{}.withHeight(20.0f).withStyle("Bold")));
     g.drawText("OPEN OMNI", 10, 4, 160, 28, juce::Justification::centredLeft);
 
     g.setColour(ACCENT.withAlpha(0.3f));
     g.drawHorizontalLine(36, 0.0f, (float)getWidth());
 }
 
-void OpenOmniEditor::timerCallback()
-{
-    // Nothing needed — APVTS handles repaints automatically
-}
+void OpenOmniEditor::timerCallback() {}

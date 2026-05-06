@@ -189,7 +189,7 @@ private:
     int                          age = 0;
     std::array<Voice, MAX_VOICES> voices;
     LFO                          lfo;
-    Reverb                       reverb;
+    OmniReverb                   reverb;
     StereoDelay                  delay;
     Chorus                       chorus;
     PresetData                   current;

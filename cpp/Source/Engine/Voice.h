@@ -254,7 +254,7 @@ public:
 
 private:
     WavetableOscillator oscA, oscB;
-    ADSR                ampEnv, filtEnv, pitchEnv;
+    OmniADSR                ampEnv, filtEnv, pitchEnv;
     SVFilter            filtL, filtR;
     SynthParams         params;
     int                 sampleRate = 44100;

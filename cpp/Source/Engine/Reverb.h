@@ -83,10 +83,10 @@ private:
 };
 
 
-class Reverb
+class OmniReverb
 {
 public:
-    Reverb()
+    OmniReverb()
     {
         init(44100);
     }

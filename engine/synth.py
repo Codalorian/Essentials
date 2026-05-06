@@ -46,6 +46,7 @@ class OpenOmni:
             chorus_rate=0.35, chorus_depth=0.003, chorus_wet=0.42,
             unison_voices=3, unison_detune=10.0,
             glide_time=0.04,
+            penv_amount=2.2, penv_attack=0.001, penv_decay=0.20,
             master_volume=0.78,
         )
 
@@ -66,6 +67,7 @@ class OpenOmni:
             chorus_rate=0.45, chorus_depth=0.0028, chorus_wet=0.38,
             unison_voices=2, unison_detune=6.0,
             glide_time=0.0,
+            penv_amount=1.8, penv_attack=0.001, penv_decay=0.22,
             master_volume=0.80,
         )
 
@@ -86,6 +88,7 @@ class OpenOmni:
             chorus_rate=0.3, chorus_depth=0.004, chorus_wet=0.5,
             unison_voices=4, unison_detune=14.0,
             glide_time=0.12,
+            penv_amount=0.0, penv_attack=0.001, penv_decay=0.1,
             master_volume=0.75,
         )
 
@@ -106,6 +109,7 @@ class OpenOmni:
             chorus_rate=0.6, chorus_depth=0.002, chorus_wet=0.25,
             unison_voices=1, unison_detune=0.0,
             glide_time=0.0,
+            penv_amount=0.0, penv_attack=0.001, penv_decay=0.1,
             master_volume=0.78,
         )
 
@@ -127,6 +131,7 @@ class OpenOmni:
             chorus_rate=0.8, chorus_depth=0.005, chorus_wet=0.32,
             unison_voices=2, unison_detune=8.0,
             glide_time=0.0,
+            penv_amount=0.0, penv_attack=0.001, penv_decay=0.1,
             master_volume=0.82,
         )
 
@@ -148,6 +153,7 @@ class OpenOmni:
             chorus_rate=0.5, chorus_depth=0.002, chorus_wet=0.28,
             unison_voices=2, unison_detune=5.0,
             glide_time=0.0,
+            penv_amount=1.2, penv_attack=0.001, penv_decay=0.15,
             master_volume=0.80,
         )
 
@@ -169,6 +175,7 @@ class OpenOmni:
             chorus_rate=0.22, chorus_depth=0.006, chorus_wet=0.55,
             unison_voices=4, unison_detune=18.0,
             glide_time=0.08,
+            penv_amount=0.0, penv_attack=0.001, penv_decay=0.1,
             master_volume=0.76,
         )
 

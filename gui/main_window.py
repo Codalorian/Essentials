@@ -204,9 +204,11 @@ class MainWindow(tk.Tk):
         self._voice_knobs = self._make_knobs(kr1, specs1)
 
         kr2 = tk.Frame(f, bg=PANEL)
-        kr2.pack(pady=(0, 8))
+        kr2.pack()
         specs2 = [
-            ('GLIDE', 0.0, 2.0, 0.04, '{:.3f}', 'glide_time'),
+            ('GLIDE',  0.0, 2.0, 0.04, '{:.3f}', 'glide_time'),
+            ('P.ENV',  0.0, 6.0, 2.2,  '{:.2f}', 'penv_amount'),
+            ('P.DEC',  0.01, 1.0, 0.20, '{:.2f}', 'penv_decay'),
         ]
         self._voice_knobs.update(self._make_knobs(kr2, specs2))
 

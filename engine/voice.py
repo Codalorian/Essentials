@@ -16,8 +16,9 @@ class Voice:
         self.sr = sample_rate
         self.osc_a = WavetableOscillator(sample_rate)
         self.osc_b = WavetableOscillator(sample_rate)
-        self.amp_env = ADSR(sample_rate)
-        self.filt_env = ADSR(sample_rate)
+        self.amp_env   = ADSR(sample_rate)
+        self.filt_env  = ADSR(sample_rate)
+        self.pitch_env = ADSR(sample_rate)
         self.filt   = SVFilter(sample_rate)
         self.filt_r = SVFilter(sample_rate)
         self.note = -1
@@ -132,9 +133,17 @@ class Voice:
         self.filt_env.release = params.get('fenv_release', 1.0)
         self.filt_env.note_on(velocity)
 
+        # Pitch envelope: fast attack → decays to 0 → creates pitch swoop on each note
+        self.pitch_env.attack  = params.get('penv_attack',  0.001)
+        self.pitch_env.decay   = params.get('penv_decay',   0.18)
+        self.pitch_env.sustain = 0.0
+        self.pitch_env.release = 0.05
+        self.pitch_env.note_on(velocity)
+
     def note_off(self):
         self.amp_env.note_off()
         self.filt_env.note_off()
+        self.pitch_env.note_off()
 
     def is_active(self) -> bool:
         return self.amp_env.is_active()
@@ -157,9 +166,11 @@ class Voice:
                 + t * (self._target_inc_b - self._glide_start_inc_b))
             self._glide_pos += n_frames
 
-        # ── Pitch modulation (LFO vibrato + MIDI pitch bend) ─────────────────
+        # ── Pitch modulation (envelope swoop + LFO vibrato + MIDI pitch bend) ──
         pitch_bend  = float(p.get('pitch_bend_semi', 0.0))
-        pitch_ratio = 2.0 ** (pitch_bend / 12.0)
+        penv_amount = float(p.get('penv_amount', 0.0))
+        penv_val    = float(np.mean(self.pitch_env.render(n_frames)))
+        pitch_ratio = 2.0 ** ((pitch_bend + penv_val * penv_amount) / 12.0)
         if lfo_target == 'pitch' and lfo_depth > 0:
             pitch_ratio *= 2.0 ** (lfo_val * lfo_depth / 12.0)
 

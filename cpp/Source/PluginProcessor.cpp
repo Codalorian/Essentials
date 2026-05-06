@@ -236,6 +236,12 @@ void OpenOmniProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::Mid
     synth.render(left, right, numSamples);
 }
 
+// ── Editor ───────────────────────────────────────────────────────────────────
+juce::AudioProcessorEditor* OpenOmniProcessor::createEditor()
+{
+    return new OpenOmniEditor(*this);
+}
+
 // ── Programs ─────────────────────────────────────────────────────────────────
 void OpenOmniProcessor::setCurrentProgram(int index)
 {

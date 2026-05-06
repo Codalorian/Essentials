@@ -8,24 +8,16 @@ from .piano import PianoKeyboard, KB_MAP
 SECTION_FONT  = ('Helvetica', 8, 'bold')
 HEADER_FONT   = ('Helvetica', 18, 'bold')
 
+_ALL_WAVES = ['sine', 'soft', 'triangle', 'sawtooth', 'square', 'bell', 'gamelan']
+
 def section(parent, title: str, col: int, row: int, colspan: int = 1,
-            padx: int = 4, pady: int = 4) -> tk.LabelFrame:
+            rowspan: int = 1, padx: int = 4, pady: int = 4) -> tk.LabelFrame:
     f = tk.LabelFrame(parent, text=title, fg=ACCENT, bg=PANEL,
                       font=SECTION_FONT, bd=1, relief='flat',
                       highlightbackground=RING, highlightthickness=1)
-    f.grid(column=col, row=row, columnspan=colspan,
+    f.grid(column=col, row=row, columnspan=colspan, rowspan=rowspan,
            sticky='nsew', padx=padx, pady=pady)
     return f
-
-def row_of_knobs(parent, specs: list) -> list[Knob]:
-    """specs: list of (label, min, max, default, fmt, param_key)"""
-    knobs = []
-    for i, spec in enumerate(specs):
-        k = Knob(parent, spec[0], spec[1], spec[2], spec[3], fmt=spec[4],
-                 size=52)
-        k.grid(row=0, column=i, padx=6, pady=6)
-        knobs.append(k)
-    return knobs
 
 
 class MainWindow(tk.Tk):
@@ -38,7 +30,7 @@ class MainWindow(tk.Tk):
         self.resizable(False, False)
         self._build_ui()
         self._bind_keyboard()
-        self.load_preset_to_ui(synth.params.get('name', 'Moonlight Bells'))
+        self.load_preset_to_ui(synth.params.get('name', 'Gamelan Wheel'))
         if midi_mgr:
             midi_mgr.on_change = self._on_midi_device_change
 
@@ -59,13 +51,13 @@ class MainWindow(tk.Tk):
         tk.Label(hdr, text='PRESET:', fg=DIM, bg=BG,
                  font=('Helvetica', 8, 'bold')).pack(side='left')
 
-        self._preset_var = tk.StringVar(value='Moonlight Bells')
+        self._preset_var = tk.StringVar(value='Gamelan Wheel')
         pm = tk.OptionMenu(hdr, self._preset_var, *self.synth.get_preset_list(),
                            command=self._on_preset)
         pm.config(bg=PANEL, fg=TEXT, activebackground=ACCENT,
                   activeforeground='white', font=('Helvetica', 9),
                   bd=0, highlightthickness=0, relief='flat',
-                  indicatoron=False, width=14)
+                  indicatoron=False, width=16)
         pm['menu'].config(bg=PANEL, fg=TEXT, activebackground=ACCENT,
                           activeforeground='white', font=('Helvetica', 9))
         pm.pack(side='left', padx=6)
@@ -81,7 +73,6 @@ class MainWindow(tk.Tk):
                                      font=('Helvetica', 7), anchor='w')
         self._audio_label.pack(side='left', padx=8)
 
-        # MIDI port picker
         tk.Label(dbar, text='MIDI:', fg='#444466', bg='#0e0e20',
                  font=('Helvetica', 7)).pack(side='left')
         self._midi_port_var = tk.StringVar(value='scanning...')
@@ -110,16 +101,17 @@ class MainWindow(tk.Tk):
         # ── Main grid ───────────────────────────────────────────────────────
         grid = tk.Frame(root, bg=BG)
         grid.pack(fill='both', padx=6, pady=4)
-        for c in range(4):
+        for c in range(5):
             grid.columnconfigure(c, weight=1)
 
-        # Row 0: OSC A | OSC B | ENVELOPE | FILTER
+        # Row 0: OSC A | OSC B | ENVELOPE | FILTER | VOICE
         self._build_osc_a(grid)
         self._build_osc_b(grid)
         self._build_env(grid)
         self._build_filter(grid)
+        self._build_voice(grid)
 
-        # Row 1: LFO | REVERB | DELAY | CHORUS
+        # Row 1: LFO | REVERB | DELAY | CHORUS  (spans cols 0–3)
         self._build_lfo(grid)
         self._build_reverb(grid)
         self._build_delay(grid)
@@ -136,27 +128,25 @@ class MainWindow(tk.Tk):
 
     def _build_osc_a(self, grid):
         f = section(grid, 'OSC A', col=0, row=0)
-        self._osc_a_wave = OptionRow(f, 'WAVE', ['sine', 'soft', 'triangle', 'sawtooth', 'square'],
-                                     'sine', callback=lambda v: self.synth.set_param('osc_a_wave', v))
+        self._osc_a_wave = OptionRow(f, 'WAVE', _ALL_WAVES, 'bell',
+                                     callback=lambda v: self.synth.set_param('osc_a_wave', v))
         self._osc_a_wave.pack(pady=(6, 2), padx=4)
-
         kr = tk.Frame(f, bg=PANEL)
         kr.pack()
         specs = [
-            ('OCT',   -3, 3, 0,    '{:.0f}',  'osc_a_oct'),
-            ('SEMI',  -12, 12, 0,  '{:.0f}',  'osc_a_semi'),
-            ('FINE',  -50, 50, 0,  '{:.1f}',  'osc_a_fine'),
-            ('LEVEL', 0,  1, 0.85, '{:.2f}',  'osc_a_level'),
+            ('OCT',   -3, 3,    0,    '{:.0f}', 'osc_a_oct'),
+            ('SEMI',  -12, 12,  0,    '{:.0f}', 'osc_a_semi'),
+            ('FINE',  -50, 50,  0,    '{:.1f}', 'osc_a_fine'),
+            ('LEVEL', 0,  1,    0.78, '{:.2f}', 'osc_a_level'),
         ]
         self._osc_a_knobs = self._make_knobs(kr, specs)
 
     def _build_osc_b(self, grid):
         f = section(grid, 'OSC B', col=1, row=0)
-
         top = tk.Frame(f, bg=PANEL)
         top.pack(pady=(6, 2), padx=4, fill='x')
-        self._osc_b_wave = OptionRow(top, 'WAVE', ['soft', 'sine', 'triangle', 'sawtooth', 'square'],
-                                     'soft', callback=lambda v: self.synth.set_param('osc_b_wave', v))
+        self._osc_b_wave = OptionRow(top, 'WAVE', _ALL_WAVES, 'gamelan',
+                                     callback=lambda v: self.synth.set_param('osc_b_wave', v))
         self._osc_b_wave.pack(side='left')
         self._osc_b_en = tk.BooleanVar(value=True)
         tk.Checkbutton(top, text='ON', variable=self._osc_b_en, bg=PANEL, fg=TEXT,
@@ -164,14 +154,13 @@ class MainWindow(tk.Tk):
                        font=('Helvetica', 7, 'bold'),
                        command=lambda: self.synth.set_param('osc_b_enabled', self._osc_b_en.get())
                        ).pack(side='right')
-
         kr = tk.Frame(f, bg=PANEL)
         kr.pack()
         specs = [
-            ('OCT',   -3, 3, 1,    '{:.0f}', 'osc_b_oct'),
-            ('SEMI',  -12, 12, 7,  '{:.0f}', 'osc_b_semi'),
-            ('FINE',  -50, 50, -4, '{:.1f}', 'osc_b_fine'),
-            ('LEVEL', 0,  1, 0.45, '{:.2f}', 'osc_b_level'),
+            ('OCT',   -3, 3,   1,     '{:.0f}', 'osc_b_oct'),
+            ('SEMI',  -12, 12, 5,     '{:.0f}', 'osc_b_semi'),
+            ('FINE',  -50, 50, -12,   '{:.1f}', 'osc_b_fine'),
+            ('LEVEL', 0,  1,   0.62,  '{:.2f}', 'osc_b_level'),
         ]
         self._osc_b_knobs = self._make_knobs(kr, specs)
 
@@ -180,10 +169,10 @@ class MainWindow(tk.Tk):
         kr = tk.Frame(f, bg=PANEL)
         kr.pack(pady=8)
         specs = [
-            ('ATK',  0.001, 5.0, 0.06,  '{:.3f}', 'attack'),
-            ('DEC',  0.001, 5.0, 0.4,   '{:.3f}', 'decay'),
-            ('SUS',  0.0,   1.0, 0.55,  '{:.2f}', 'sustain'),
-            ('REL',  0.01,  8.0, 2.8,   '{:.2f}', 'release'),
+            ('ATK',  0.001, 5.0, 0.004, '{:.3f}', 'attack'),
+            ('DEC',  0.001, 5.0, 0.90,  '{:.3f}', 'decay'),
+            ('SUS',  0.0,   1.0, 0.07,  '{:.2f}', 'sustain'),
+            ('REL',  0.01,  8.0, 4.2,   '{:.2f}', 'release'),
         ]
         self._env_knobs = self._make_knobs(kr, specs)
 
@@ -196,11 +185,30 @@ class MainWindow(tk.Tk):
         kr = tk.Frame(f, bg=PANEL)
         kr.pack()
         specs = [
-            ('CUT',   80,  18000, 3800, '{:.0f}', 'filter_cutoff'),
-            ('RES',   0.1, 4.0,   0.28, '{:.2f}', 'filter_resonance'),
-            ('ENV',  -1.0, 1.0,   0.35, '{:.2f}', 'filter_env_amt'),
+            ('CUT',   80,   18000, 5800, '{:.0f}', 'filter_cutoff'),
+            ('RES',   0.1,  4.0,   0.38, '{:.2f}', 'filter_resonance'),
+            ('ENV',  -1.0,  1.0,   0.28, '{:.2f}', 'filter_env_amt'),
+            ('KTRK',  0.0,  1.0,   0.55, '{:.2f}', 'filter_keytrack'),
         ]
         self._filt_knobs = self._make_knobs(kr, specs)
+
+    def _build_voice(self, grid):
+        f = section(grid, 'VOICE', col=4, row=0)
+
+        kr1 = tk.Frame(f, bg=PANEL)
+        kr1.pack(pady=(8, 0))
+        specs1 = [
+            ('VOICES', 1, 8,  3,    '{:.0f}', 'unison_voices'),
+            ('DETUNE', 0, 50, 10.0, '{:.1f}', 'unison_detune'),
+        ]
+        self._voice_knobs = self._make_knobs(kr1, specs1)
+
+        kr2 = tk.Frame(f, bg=PANEL)
+        kr2.pack(pady=(0, 8))
+        specs2 = [
+            ('GLIDE', 0.0, 2.0, 0.04, '{:.3f}', 'glide_time'),
+        ]
+        self._voice_knobs.update(self._make_knobs(kr2, specs2))
 
     def _build_lfo(self, grid):
         f = section(grid, 'LFO', col=0, row=1)
@@ -208,13 +216,13 @@ class MainWindow(tk.Tk):
                                    'sine', callback=lambda v: self.synth.set_param('lfo_wave', v))
         self._lfo_wave.pack(pady=(6, 2), padx=4)
         self._lfo_target = OptionRow(f, 'TARGET', ['pitch', 'filter', 'volume'],
-                                     'pitch', callback=lambda v: self.synth.set_param('lfo_target', v))
+                                     'filter', callback=lambda v: self.synth.set_param('lfo_target', v))
         self._lfo_target.pack(pady=(0, 2), padx=4)
         kr = tk.Frame(f, bg=PANEL)
         kr.pack()
         specs = [
-            ('RATE',  0.01, 20.0, 0.32, '{:.2f}', 'lfo_rate'),
-            ('DEPTH', 0.0,  1.0,  0.18, '{:.2f}', 'lfo_depth'),
+            ('RATE',  0.01, 20.0, 0.22, '{:.2f}', 'lfo_rate'),
+            ('DEPTH', 0.0,  1.0,  0.14, '{:.2f}', 'lfo_depth'),
         ]
         self._lfo_knobs = self._make_knobs(kr, specs)
 
@@ -223,9 +231,9 @@ class MainWindow(tk.Tk):
         kr = tk.Frame(f, bg=PANEL)
         kr.pack(pady=8)
         specs = [
-            ('SIZE', 0.0, 1.0, 0.88, '{:.2f}', 'reverb_size'),
-            ('DAMP', 0.0, 1.0, 0.45, '{:.2f}', 'reverb_damp'),
-            ('WET',  0.0, 1.0, 0.62, '{:.2f}', 'reverb_wet'),
+            ('SIZE', 0.0, 1.0, 0.92, '{:.2f}', 'reverb_size'),
+            ('DAMP', 0.0, 1.0, 0.28, '{:.2f}', 'reverb_damp'),
+            ('WET',  0.0, 1.0, 0.70, '{:.2f}', 'reverb_wet'),
         ]
         self._rev_knobs = self._make_knobs(kr, specs)
 
@@ -234,9 +242,9 @@ class MainWindow(tk.Tk):
         kr = tk.Frame(f, bg=PANEL)
         kr.pack(pady=8)
         specs = [
-            ('TIME', 0.02, 2.0, 0.375, '{:.3f}', 'delay_time'),
-            ('FDBK', 0.0,  0.95, 0.38, '{:.2f}', 'delay_feedback'),
-            ('WET',  0.0,  1.0,  0.24, '{:.2f}', 'delay_wet'),
+            ('TIME', 0.02, 2.0,  0.333, '{:.3f}', 'delay_time'),
+            ('FDBK', 0.0,  0.95, 0.44,  '{:.2f}', 'delay_feedback'),
+            ('WET',  0.0,  1.0,  0.32,  '{:.2f}', 'delay_wet'),
         ]
         self._dly_knobs = self._make_knobs(kr, specs)
 
@@ -245,9 +253,9 @@ class MainWindow(tk.Tk):
         kr = tk.Frame(f, bg=PANEL)
         kr.pack(pady=8)
         specs = [
-            ('RATE',  0.1, 5.0,  0.45,   '{:.2f}', 'chorus_rate'),
-            ('DEPTH', 0.0, 0.01, 0.0028, '{:.4f}', 'chorus_depth'),
-            ('WET',   0.0, 1.0,  0.38,   '{:.2f}', 'chorus_wet'),
+            ('RATE',  0.1, 5.0,  0.35,  '{:.2f}', 'chorus_rate'),
+            ('DEPTH', 0.0, 0.01, 0.003, '{:.4f}', 'chorus_depth'),
+            ('WET',   0.0, 1.0,  0.42,  '{:.2f}', 'chorus_wet'),
         ]
         self._cho_knobs = self._make_knobs(kr, specs)
 
@@ -275,17 +283,17 @@ class MainWindow(tk.Tk):
     def load_preset_to_ui(self, name: str):
         p = self.synth.params
 
-        self._osc_a_wave.set(p.get('osc_a_wave', 'sine'))
-        self._osc_b_wave.set(p.get('osc_b_wave', 'soft'))
+        self._osc_a_wave.set(p.get('osc_a_wave', 'bell'))
+        self._osc_b_wave.set(p.get('osc_b_wave', 'gamelan'))
         self._osc_b_en.set(p.get('osc_b_enabled', True))
         self._filt_mode.set(p.get('filter_mode', 'lowpass'))
         self._lfo_wave.set(p.get('lfo_wave', 'sine'))
-        self._lfo_target.set(p.get('lfo_target', 'pitch'))
+        self._lfo_target.set(p.get('lfo_target', 'filter'))
 
         all_knobs = {
             **self._osc_a_knobs, **self._osc_b_knobs, **self._env_knobs,
             **self._filt_knobs,  **self._lfo_knobs,   **self._rev_knobs,
-            **self._dly_knobs,   **self._cho_knobs,
+            **self._dly_knobs,   **self._cho_knobs,   **self._voice_knobs,
         }
         for key, knob in all_knobs.items():
             if key in p:
@@ -302,7 +310,6 @@ class MainWindow(tk.Tk):
             pass
 
     def _poll_midi_ports(self):
-        """Refresh MIDI port menu every 2 s (handles hot-plug)."""
         try:
             from engine.device_manager import list_midi_inputs
             ports = list_midi_inputs()
@@ -324,7 +331,6 @@ class MainWindow(tk.Tk):
                 self._midi_port_menu.add_command(
                     label='(no MIDI devices found)', state='disabled')
 
-            # Update label
             if current:
                 short = current[:30] + '...' if len(current) > 30 else current
                 self._midi_port_var.set(short)
@@ -342,7 +348,6 @@ class MainWindow(tk.Tk):
             self.midi_mgr.set_preferred(name)
 
     def _on_midi_device_change(self, name):
-        """Called from MidiManager thread — schedule GUI update on main thread."""
         self.after(0, lambda: self._update_midi_label(name))
 
     def _update_midi_label(self, name):

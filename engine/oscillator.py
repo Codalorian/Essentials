@@ -41,6 +41,18 @@ class WavetableOscillator:
         mx = np.max(np.abs(soft))
         cls._tables['soft'] = (soft / mx).astype(np.float32)
 
+        # Bell: bright glassy character — selective high harmonics give shimmer
+        bell = (np.sin(t) * 0.70 + np.sin(2 * t) * 0.18 + np.sin(3 * t) * 0.06
+                + np.sin(5 * t) * 0.12 + np.sin(8 * t) * 0.06 + np.sin(10 * t) * 0.03)
+        mx = np.max(np.abs(bell))
+        cls._tables['bell'] = (bell / mx).astype(np.float32)
+
+        # Gamelan: metallic timbre — strong even harmonics + upper partials
+        gamelan = (np.sin(t) * 0.55 + np.sin(2 * t) * 0.32 + np.sin(3 * t) * 0.22
+                   + np.sin(5 * t) * 0.14 + np.sin(7 * t) * 0.08 + np.sin(11 * t) * 0.04)
+        mx = np.max(np.abs(gamelan))
+        cls._tables['gamelan'] = (gamelan / mx).astype(np.float32)
+
         for k in list(cls._tables):
             cls._tables[k] = np.clip(cls._tables[k], -1.0, 1.0)
 

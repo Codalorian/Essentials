@@ -29,7 +29,7 @@ import argparse
 import platform
 
 SAMPLE_RATE = 44100
-BLOCK_SIZE  = 512
+BLOCK_SIZE  = 1024
 
 
 # ─── Audio ────────────────────────────────────────────────────────────────────

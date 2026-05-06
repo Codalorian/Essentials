@@ -170,7 +170,7 @@ class Voice:
         pitch_bend  = float(p.get('pitch_bend_semi', 0.0))
         penv_amount = float(p.get('penv_amount', 0.0))
         penv_val    = float(np.mean(self.pitch_env.render(n_frames)))
-        pitch_ratio = 2.0 ** ((pitch_bend + penv_val * penv_amount) / 12.0)
+        pitch_ratio = 2.0 ** ((pitch_bend - penv_val * penv_amount) / 12.0)
         if lfo_target == 'pitch' and lfo_depth > 0:
             pitch_ratio *= 2.0 ** (lfo_val * lfo_depth / 12.0)
 

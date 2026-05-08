@@ -250,8 +250,84 @@ void OpenOmniProcessor::setCurrentProgram(int index)
     {
         currentProgram = index;
         synth.loadPresetByName(names[index]);
-        // Sync APVTS back from preset (basic sync — preset values become new defaults)
+        syncPresetToAPVTS(synth.getCurrentPreset());
     }
+}
+
+void OpenOmniProcessor::syncPresetToAPVTS(const PresetData& p)
+{
+    const auto& v = p.voice;
+
+    auto setF = [&](const juce::String& id, float val) {
+        if (auto* param = apvts.getParameter(id))
+            param->setValueNotifyingHost(
+                param->getNormalisableRange().convertTo0to1(val));
+    };
+
+    auto setChoice = [&](const juce::String& id, const juce::StringArray& choices, const std::string& val) {
+        int idx = choices.indexOf(juce::String(val));
+        setF(id, (float)std::max(0, idx));
+    };
+
+    auto setB = [&](const juce::String& id, bool val) {
+        if (auto* param = apvts.getParameter(id))
+            param->setValueNotifyingHost(val ? 1.0f : 0.0f);
+    };
+
+    setChoice("osc_a_wave", ParamID::WAVES, v.oscAWave);
+    setF("osc_a_level", v.oscALevel);
+    setF("osc_a_oct",   (float)v.oscAOct);
+    setF("osc_a_semi",  (float)v.oscASemi);
+    setF("osc_a_fine",  v.oscAFine);
+
+    setChoice("osc_b_wave", ParamID::WAVES, v.oscBWave);
+    setF("osc_b_level", v.oscBLevel);
+    setF("osc_b_oct",   (float)v.oscBOct);
+    setF("osc_b_semi",  (float)v.oscBSemi);
+    setF("osc_b_fine",  v.oscBFine);
+    setB("osc_b_en",    v.oscBEnabled);
+
+    setF("attack",  v.attack);
+    setF("decay",   v.decay);
+    setF("sustain", v.sustain);
+    setF("release", v.release);
+
+    setF("fenv_attack",  v.fenvAttack);
+    setF("fenv_decay",   v.fenvDecay);
+    setF("fenv_sustain", v.fenvSustain);
+    setF("fenv_release", v.fenvRelease);
+
+    setF("penv_amount", v.penvAmount);
+    setF("penv_attack", v.penvAttack);
+    setF("penv_decay",  v.penvDecay);
+
+    setChoice("filter_mode", ParamID::FMODES, v.filterMode);
+    setF("filter_cutoff",    v.filterCutoff);
+    setF("filter_resonance", v.filterResonance);
+    setF("filter_env_amt",   v.filterEnvAmt);
+    setF("filter_keytrack",  v.filterKeytrack);
+
+    setChoice("lfo_wave",   ParamID::LWAVES, p.lfoWave);
+    setChoice("lfo_target", ParamID::LTGTS,  v.lfoTarget);
+    setF("lfo_rate",  p.lfoRate);
+    setF("lfo_depth", v.lfoDepth);
+
+    setF("reverb_size", p.reverbSize);
+    setF("reverb_damp", p.reverbDamp);
+    setF("reverb_wet",  p.reverbWet);
+
+    setF("delay_time",     p.delayTime);
+    setF("delay_feedback", p.delayFeedback);
+    setF("delay_wet",      p.delayWet);
+
+    setF("chorus_rate",  p.chorusRate);
+    setF("chorus_depth", p.chorusDepth);
+    setF("chorus_wet",   p.chorusWet);
+
+    setF("unison_voices", (float)v.unisonVoices);
+    setF("unison_detune", v.unisonDetune);
+    setF("glide_time",    v.glideTime);
+    setF("master_volume", p.masterVolume);
 }
 
 const juce::String OpenOmniProcessor::getProgramName(int index)

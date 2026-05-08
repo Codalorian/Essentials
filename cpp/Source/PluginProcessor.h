@@ -36,6 +36,7 @@ public:
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
     void syncParamsToSynth();
+    void syncPresetToAPVTS(const PresetData& p);
 
     OpenOmniSynth& getSynth() { return synth; }
 

@@ -169,13 +169,14 @@ public:
 
     std::vector<std::string> getPresetNames() const
     {
-        return {"Gamelan Wheel","Moonlight Bells","Dream Pad",
+        return {"Gamelan Wheel","Moonlight Bells","Moonlight","Dream Pad",
                 "Sad Bells","Solar Wind","Plucked Koto","Glass Keys"};
     }
 
     void loadPresetByName(const std::string& name)
     {
         if      (name == "Moonlight Bells") applyPreset(moonlightBells());
+        else if (name == "Moonlight")       applyPreset(moonlight());
         else if (name == "Dream Pad")       applyPreset(dreamPad());
         else if (name == "Sad Bells")       applyPreset(sadBells());
         else if (name == "Solar Wind")      applyPreset(solarWind());
@@ -373,6 +374,41 @@ private:
         p.delayTime=0.5f; p.delayFeedback=0.28f; p.delayWet=0.20f;
         p.chorusRate=0.22f; p.chorusDepth=0.006f; p.chorusWet=0.55f;
         p.masterVolume=0.76f;
+        return p;
+    }
+
+    static PresetData moonlight()
+    {
+        PresetData p;
+        p.name = "Moonlight";
+        auto& v = p.voice;
+        // Metallic/wubby character: square + sawtooth with high unison
+        v.oscAWave="square"; v.oscALevel=0.75f; v.oscAOct=0; v.oscASemi=0; v.oscAFine=0.0f;
+        v.oscBWave="sawtooth"; v.oscBLevel=0.68f; v.oscBOct=0; v.oscBSemi=0; v.oscBFine=5.0f;
+        v.oscBEnabled=true;
+        // Punchy attack with quick decay for wubby articulation
+        v.attack=0.008f; v.decay=0.25f; v.sustain=0.4f; v.release=1.2f;
+        // Filter envelope for dynamic wub effect
+        v.fenvAttack=0.006f; v.fenvDecay=0.2f; v.fenvSustain=0.0f; v.fenvRelease=0.8f;
+        // Lowpass with high resonance for metallic timbre
+        v.filterMode="lowpass"; v.filterCutoff=4200.0f; v.filterResonance=0.85f;
+        v.filterEnvAmt=0.65f; v.filterKeytrack=0.4f;
+        // LFO modulating filter for extra movement
+        v.lfoTarget="filter"; v.lfoDepth=0.25f;
+        // High unison for lush, metallic character
+        v.unisonVoices=6; v.unisonDetune=20.0f;
+        v.glideTime=0.0f;
+        // Pitch envelope for wobble
+        v.penvAmount=1.8f; v.penvAttack=0.001f; v.penvDecay=0.15f;
+        // LFO settings
+        p.lfoWave="sine"; p.lfoRate=3.2f;
+        // Heavy reverb for atmospheric depth
+        p.reverbSize=0.98f; p.reverbDamp=0.25f; p.reverbWet=0.85f;
+        // Delay for space
+        p.delayTime=0.375f; p.delayFeedback=0.5f; p.delayWet=0.35f;
+        // Chorus for lush shimmering
+        p.chorusRate=0.6f; p.chorusDepth=0.005f; p.chorusWet=0.48f;
+        p.masterVolume=0.82f;
         return p;
     }
 };
